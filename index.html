@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birebir Özel Ders Platformu</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+
+    <!-- GİRİŞ EKRANI -->
+    <div id="loginScreen" class="auth-overlay">
+        <div class="auth-card">
+            <h1 class="logo-title"><span class="neon-text">ÖZELDERS</span>.live</h1>
+            <p class="auth-sub">Birebir Canlı Ders Platformu</p>
+            
+            <div class="login-form-group">
+                <input type="text" id="loginNameInput" placeholder="Adınız Soyadınız" class="auth-input">
+                <input type="email" id="loginEmailInput" placeholder="E-posta Adresiniz (@gmail.com)" class="auth-input">
+                <small class="hint-text">*(GitHub whitelist üzerinden öğretmen/öğrenci rolü otomatik atanır)*</small>
+                <button class="btn btn-primary btn-block" onclick="handleGitHubValidatedLogin()">Giriş Yap</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ANA UYGULAMA -->
+    <div id="appScreen" style="display: none;">
+        
+        <!-- Navbar -->
+        <header class="navbar">
+            <div class="logo">
+                <span class="neon-text">ÖZELDERS</span>.live
+            </div>
+            
+            <div class="user-profile">
+                <img id="userAvatar" src="" alt="Profil" class="avatar-img">
+                <div class="user-details">
+                    <span id="userDisplayName" class="user-name">...</span>
+                    <span id="userRoleBadge" class="role-badge">...</span>
+                </div>
+                <button class="btn-logout" onclick="handleLogout()">Çıkış</button>
+            </div>
+        </header>
+
+        <main class="container">
+
+            <!-- ================= ÖĞRENCİ PANELİ ================= -->
+            <section id="studentPanel" class="panel-section" style="display: none;">
+                <div class="welcome-card">
+                    <h2>Hoş Geldin, <span id="studentGreetingName" class="neon-text"></span> 👋</h2>
+                    <p>8. Sınıf LGS Birebir Ders İlerlemen</p>
+                </div>
+
+                <div class="section-title">📊 Aktif Ders Paketlerin</div>
+                <div class="cards-grid" id="studentPackageList"></div>
+
+                <div class="section-title">🛍️ Yeni Birebir Ders Paketi Satın Al (QR / FAST - %0 Komisyon)</div>
+                <div class="cards-grid">
+                    <div class="card shop-card">
+                        <h3>8. Sınıf LGS Matematik</h3>
+                        <p class="desc">8 Seans Birebir Özel Ders + Soru Çözümü</p>
+                        <div class="price">2.000 ₺ <span class="fee-badge">%0 Komisyon</span></div>
+                        <button class="btn btn-success" onclick="startQRPayment('8. Sınıf LGS Matematik', 2000)">QR / FAST ile Satın Al</button>
+                    </div>
+
+                    <div class="card shop-card">
+                        <h3>LGS Fen Bilimleri Birebir</h3>
+                        <p class="desc">8 Seans Birebir Konu Anlatımı ve Deneme</p>
+                        <div class="price">2.000 ₺ <span class="fee-badge">%0 Komisyon</span></div>
+                        <button class="btn btn-success" onclick="startQRPayment('LGS Fen Bilimleri Birebir', 2000)">QR / FAST ile Satın Al</button>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ================= ÖĞRETMEN PANELİ (TAMAMEN AYRI VE SADEECE DERS ODAKLI) ================= -->
+            <section id="teacherPanel" class="panel-section" style="display: none;">
+                <div class="welcome-card teacher-welcome">
+                    <h2>Hoş Geldiniz, <span id="teacherGreetingName" class="neon-text"></span> 👨‍🏫</h2>
+                    <p>GitHub Whitelist Onaylı Öğretmen Paneli</p>
+                </div>
+
+                <div class="section-title">📅 Bugün Yapılacak Birebir Dersler</div>
+                <div class="cards-grid" id="teacherScheduleList"></div>
+            </section>
+
+
+            <!-- ================= CANLI YAYIN ODASI ================= -->
+            <section id="liveRoom" class="panel-section" style="display: none;">
+                <div class="room-header">
+                    <div>
+                        <h2 id="roomTitle">Birebir Canlı Ders Odası</h2>
+                        <span class="live-indicator">🔴 CANLI YAYIN</span>
+                    </div>
+                    <button class="btn btn-danger" onclick="leaveClassroom()">Dersten Çık</button>
+                </div>
+
+                <div class="classroom-grid">
+                    <div class="main-screen">
+                        <video id="sharedScreenVideo" autoplay playsinline style="width:100%; height:100%; object-fit:contain; display:none;"></video>
+                        <div id="noScreenText" class="screen-placeholder">
+                            <p>🖥️ Öğretmen Ekran Paylaşımı Bekleniyor...</p>
+                        </div>
+                    </div>
+
+                    <div class="cameras-sidebar">
+                        <div class="camera-box">
+                            <video id="teacherCam" autoplay playsinline muted></video>
+                            <span class="cam-label">👨‍🏫 Öğretmen</span>
+                        </div>
+                        <div class="camera-box">
+                            <video id="studentCam" autoplay playsinline muted></video>
+                            <span class="cam-label">👤 Öğrenci</span>
+                        </div>
+
+                        <div class="controls-box">
+                            <button class="btn-ctrl" onclick="toggleAudio()">🎙️ Ses</button>
+                            <button class="btn-ctrl" onclick="toggleVideo()">📹 Kamera</button>
+                            <button class="btn-ctrl btn-share" id="teacherShareBtn" onclick="startScreenShare()" style="display:none;">🖥️ Ekran Paylaş</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- QR / FAST ÖDEME MODALI (Sadece Öğrenci Kullanır) -->
+    <div id="paymentModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closePaymentModal()">&times;</span>
+            <h3>FAST / QR ile Komisyonsuz Ödeme</h3>
+            <p id="modalPackageTitle" class="modal-pkg-name"></p>
+
+            <div class="qr-container">
+                <img id="dynamicQR" src="" alt="Ödeme QR Kodu">
+                <div class="price-tag" id="modalPriceTag"></div>
+            </div>
+
+            <div class="payment-instructions">
+                <p><strong>Açıklama Kodunuz:</strong> <span id="paymentRefCode" class="ref-code"></span></p>
+                <small>Banka uygulamanızdan FAST yollarken açıklamaya yukarıdaki kodu yazınız.</small>
+            </div>
+
+            <button class="btn btn-success btn-block" onclick="completePaymentSimulation()">Ödemeyi Tamamladım (Otomatik Aktif Et)</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
